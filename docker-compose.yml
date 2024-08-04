@@ -1,0 +1,50 @@
+version: '3.8'
+
+services:
+  keycloak_erasense:
+    image: quay.io/keycloak/keycloak:21.0.0 #versiyon deneme amaçlı seçildi
+    command: start-dev
+    environment:
+      KC_DB: postgres
+      KC_DB_URL_HOST: postgres_keycloak_Erasense
+      KC_DB_URL_DATABASE: keycloak
+      KC_DB_USERNAME: keycloak_user  # PostgreSQL kullanıcı adı
+      KC_DB_PASSWORD: keycloak_password  # PostgreSQL parolası
+      KC_DB_SCHEMA: public
+      KEYCLOAK_ADMIN: admin_erasense #keycloak servisine giriş ismi
+      KEYCLOAK_ADMIN_PASSWORD: admin_Erasense #keycloak servisine giriş şifresi
+      KC_SPI_THEME_DEFAULT: 'my-theme'
+    volumes:
+      - ./themes:/opt/keycloak/themes  # Temayı içeriye attık
+    ports:
+      - "8890:8080" #http://localhost:8890/ bağlantısıyla keycloak yönetici ekranına ulaşabiliriz.
+    depends_on:
+      postgres_keycloak_Erasense:
+        condition: service_healthy
+    networks:
+      - keycloak_Erasense_dev_network
+  
+  postgres_keycloak_Erasense:
+    image: postgres:14.2
+    command: postgres -c 'max_connections=200'
+    volumes:
+      - C:\Users\halil\.docker\projects_halil\erasense:/var/lib/postgresql/dataaa  #kayıt yeri değiştirilse /var/lib ... not empty hatası kaldırılır
+    environment:
+      POSTGRES_DB: keycloak
+      POSTGRES_USER: keycloak_user  # PostgreSql kullanıcı adı
+      POSTGRES_PASSWORD: keycloak_password  # PostgreSql parolası
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U keycloak_user -d keycloak"]
+      interval: 10s
+      retries: 5
+    ports:
+      - "5433:5432"
+    networks:
+      - keycloak_Erasense_dev_network
+
+volumes:
+  pqdata_keycloak_Erasense:
+
+networks:
+  keycloak_Erasense_dev_network:
+    driver: bridge
